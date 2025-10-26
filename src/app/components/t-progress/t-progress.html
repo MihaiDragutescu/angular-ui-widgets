@@ -1,0 +1,11 @@
+<div role="progressbar" [attr.aria-valuenow]="validProgress()" aria-valuemin="0" aria-valuemax="100">
+  <svg [attr.width]="diameter()" [attr.height]="diameter()">
+    <g [attr.transform]="'rotate(-90 ' + validRadius() + ' ' + validRadius() + ')'">
+      <circle class="track" [attr.cx]="validRadius()" [attr.cy]=" validRadius()" [attr.r]="normalizedRadius()"></circle>
+      <circle [attr.cx]="validRadius()" [attr.cy]="validRadius()" [attr.r]="normalizedRadius()" [attr.stroke]="color()" [attr.stroke-dasharray]="circumference()" [attr.stroke-dashoffset]="dashOffset()"></circle>
+    </g>
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">
+      {{ validProgress() }}%
+    </text>
+  </svg>
+</div>

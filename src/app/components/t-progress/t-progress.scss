@@ -1,0 +1,20 @@
+svg {
+  display: block;
+  user-select: none;
+
+  circle {
+    fill: none;
+    stroke-width: 10px;
+    transition: stroke-dashoffset 0.5s ease;
+    stroke-linecap: round;
+
+    &.track {
+      stroke: #eee;
+    }
+  }
+
+  text {
+    font-size: 16px;
+    fill: #333;
+  }
+}
