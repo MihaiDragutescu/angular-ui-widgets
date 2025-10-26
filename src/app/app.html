@@ -1,6 +1,14 @@
 <main>
+  <section class="grid-section">
+    <h2>DataGrid (Table)</h2>
+    <t-grid [data]="myData" [sortable]="true" [pageSize]="5" (sortChange)="onSortChange($event)" (paginationChange)="performFetch($event)">
+      <t-column name="First Name" property="firstName" [sortable]="true" />
+      <t-column name="Last Name" property="lastName" [sortable]="true" />
+      <t-column name="Email" property="email" [sortable]="false" />
+    </t-grid>
+  </section>
   <section class="progress-section">
-    <h2 class="progress-section__title">Progress Indicator</h2>
+    <h2>Progress Indicator</h2>
     <div class="progress-section__examples">
       <div class="progress-section__example">
         <t-progress [radius]="75" [progress]="33" color="#4caf50"></t-progress>

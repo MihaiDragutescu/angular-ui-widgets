@@ -1,0 +1,50 @@
+<div class="t-grid">
+  <table class="t-grid__table">
+    <thead>
+      <tr>
+        @for (col of columns; track col) {
+        <th (click)="onHeaderClick(col)" [class.sortable]="sortable() && col.sortable()">
+          {{ col.name() }}
+          @if (sortable() && col.sortable()) {
+          <span class="t-grid__sort-icon">{{ getSortIcon(col) }}</span>
+          }
+        </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of visibleData(); track $index) {
+      <tr>
+        @for (col of columns; track col) {
+        <td>{{ row[col.property() ] }}</td>
+        }
+      </tr>
+      }
+    </tbody>
+
+  </table>
+
+  <div class="t-grid__footer">
+    @if (localPageSize() !== null) {
+    <button (click)="prevPage()" [disabled]="currentPage() === 1">Previous</button>
+
+    <span class="t-grid__page-label">
+      Page {{ currentPage() }} @if (totalPages > 1) { / {{ totalPages }} }
+    </span>
+
+    <button (click)="nextPage()" [disabled]="currentPage() === totalPages">Next</button>
+    }
+
+    <label class="t-grid__page-size">
+      Show
+      <select (change)="onPageSizeChange($event)">
+        @for (size of pageSizeOptions; track size) {
+        <option [value]="size" [selected]="localPageSize() === size">{{ size }}</option>
+        }
+        <option value="">All</option>
+      </select>
+      rows
+    </label>
+  </div>
+
+</div>
