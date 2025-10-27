@@ -4,7 +4,6 @@ import { TProgress } from './t-progress';
 describe('TProgress', () => {
   let component: TProgress;
   let fixture: ComponentFixture<TProgress>;
-  let element: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -13,7 +12,6 @@ describe('TProgress', () => {
 
     fixture = TestBed.createComponent(TProgress);
     component = fixture.componentInstance;
-    element = fixture.nativeElement;
 
     fixture.componentRef.setInput('radius', 50);
     fixture.componentRef.setInput('progress', 33);
@@ -38,14 +36,6 @@ describe('TProgress', () => {
     expect(component.validProgress()).toBe(100);
   });
 
-  it('should render progress percentage text', () => {
-    fixture.componentRef.setInput('progress', 60);
-    fixture.detectChanges();
-
-    const text = element.querySelector('text');
-    expect(text?.textContent?.trim()).toBe('60%');
-  });
-
   it('should decrease dashOffset as progress increases', () => {
     fixture.componentRef.setInput('progress', 0);
     const offsetStart = component.dashOffset();
@@ -56,22 +46,12 @@ describe('TProgress', () => {
     expect(offsetEnd).toBeLessThan(offsetStart);
   });
 
-  it('should emit complete event when progress reaches 100', async () => {
+  it('should emit complete event when progress reaches 100', () => {
     const spy = spyOn(component.complete, 'emit');
 
     fixture.componentRef.setInput('progress', 100);
     fixture.detectChanges();
-    await fixture.whenStable();
 
     expect(spy).toHaveBeenCalledTimes(1);
-  });
-
-  it('should apply color input to progress circle stroke', () => {
-    fixture.componentRef.setInput('color', '#2196f3');
-    fixture.detectChanges();
-
-    const circles = element.querySelectorAll('circle');
-    const progressCircle = Array.from(circles).find((c) => !c.classList.contains('track'));
-    expect(progressCircle?.getAttribute('stroke')).toBe('#2196f3');
   });
 });

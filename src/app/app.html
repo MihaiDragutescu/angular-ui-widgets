@@ -19,7 +19,7 @@
         <button class="progress-section__button" (click)="increaseProgress()">
           Increase Progress
         </button>
-        @if (progress() >= 100) {
+        @if (isComplete()) {
         <p class="progress-section__message">
           Progress complete!
         </p>

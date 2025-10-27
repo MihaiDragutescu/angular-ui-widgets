@@ -1,40 +1,5 @@
 <div class="t-grid">
-  <table class="t-grid__table">
-    <thead>
-      <tr>
-        @for (col of columns; track col) {
-        <th (click)="onHeaderClick(col)" [class.sortable]="sortable() && col.sortable()">
-          {{ col.name() }}
-          @if (sortable() && col.sortable()) {
-          <span class="t-grid__sort-icon">{{ getSortIcon(col) }}</span>
-          }
-        </th>
-        }
-      </tr>
-    </thead>
-    <tbody>
-      @for (row of visibleData(); track $index) {
-      <tr>
-        @for (col of columns; track col) {
-        <td>{{ row[col.property() ] }}</td>
-        }
-      </tr>
-      }
-    </tbody>
-
-  </table>
-
-  <div class="t-grid__footer">
-    @if (localPageSize() !== null) {
-    <button (click)="prevPage()" [disabled]="currentPage() === 1">Previous</button>
-
-    <span class="t-grid__page-label">
-      Page {{ currentPage() }} @if (totalPages > 1) { / {{ totalPages }} }
-    </span>
-
-    <button (click)="nextPage()" [disabled]="currentPage() === totalPages">Next</button>
-    }
-
+  <div class="t-grid__header">
     <label class="t-grid__page-size">
       Show
       <select (change)="onPageSizeChange($event)">
@@ -46,5 +11,37 @@
       rows
     </label>
   </div>
-
+  <div class="t-grid__scroll-container">
+    <table class="t-grid__table">
+      <thead>
+        <tr>
+          @for (col of columns; track $index) {
+          @let isSortable = sortable() && col.sortable();
+          <th (click)="onHeaderClick(col)" [class.sortable]="isSortable">
+            {{ col.name() }}
+            @if (isSortable) {
+            <span class="t-grid__sort-icon">{{ getSortIcon(col) }}</span>
+            }
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visibleData(); track $index) {
+        <tr>
+          @for (col of columns; track col) {
+          <td>{{ row[col.property() ] }}</td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="t-grid__footer">
+    <button (click)="prevPage()" [disabled]="currentPage() === 1">Previous</button>
+    <span class="t-grid__page-label">
+      Page {{ currentPage() }} / {{ totalPages() }}
+    </span>
+    <button (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+  </div>
 </div>

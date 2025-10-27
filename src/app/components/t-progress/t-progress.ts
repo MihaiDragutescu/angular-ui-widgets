@@ -26,7 +26,7 @@ export class TProgress {
   constructor() {
     effect(() => {
       if (this.validProgress() >= 100) {
-        queueMicrotask(() => this.complete.emit());
+        this.complete.emit();
       }
     });
   }

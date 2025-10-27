@@ -12,6 +12,8 @@ import {
 import { isObservable, Observable } from 'rxjs';
 import { DEFAULT_PAGE_SIZE_OPTIONS, Direction } from './t-grid.consts';
 import { TColumn } from './t-column/t-column';
+import { PaginationChangeEvent, SortChangeEvent } from './t-grid.types';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 't-grid',
@@ -23,26 +25,29 @@ import { TColumn } from './t-column/t-column';
 export class TGrid<T> {
   data = input.required<T[] | Observable<T[]>>();
   sortable = input<boolean>(false);
-  pageSize = input<number | null>(DEFAULT_PAGE_SIZE_OPTIONS[0]);
+  pageSize = input<number | null>(null);
 
-  sortChange = output<{ columnName: string; direction: Direction }>();
-  paginationChange = output<{ currentPage: number; pageSize: number | null }>();
+  sortChange = output<SortChangeEvent>();
+  paginationChange = output<PaginationChangeEvent>();
 
   @ContentChildren(TColumn) columns!: QueryList<TColumn<T>>;
 
-  resolvedData = signal<T[]>([]);
   localPageSize = signal<number | null>(null);
   currentPage = signal(1);
-  sortedColumn = signal<string | null>(null);
-  sortDirection = signal<Direction>(Direction.None);
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS;
+
+  private resolvedData = signal<T[]>([]);
+  private sortedColumn = signal<keyof T | null>(null);
+  private sortDirection = signal<Direction>(Direction.None);
 
   constructor() {
     effect(() => {
-      const src = this.data();
-      if (Array.isArray(src)) {
-        this.resolvedData.set(src);
-      } else if (isObservable(src)) {
-        src.subscribe((list) => this.resolvedData.set(list));
+      const inputData = this.data();
+
+      if (Array.isArray(inputData)) {
+        this.resolvedData.set(inputData);
+      } else if (isObservable(inputData)) {
+        inputData.pipe(takeUntilDestroyed()).subscribe((list) => this.resolvedData.set(list));
       }
     });
 
@@ -51,65 +56,98 @@ export class TGrid<T> {
     });
   }
 
-  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS;
-
-  sortedData = computed(() => {
+  private sortedData = computed(() => {
     const list = this.resolvedData();
-    const col = this.sortedColumn();
-    const dir = this.sortDirection();
-    if (!col || dir === Direction.None) return list;
+    const currentlySortedColumn = this.sortedColumn();
+    const direction = this.sortDirection();
 
-    return [...list].sort((a, b) => {
-      const key = col as keyof T;
-      const av = a[key];
-      const bv = b[key];
+    if (!currentlySortedColumn || direction === Direction.None) {
+      return list;
+    }
 
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      if (av < bv) return dir === Direction.Asc ? -1 : 1;
-      if (av > bv) return dir === Direction.Asc ? 1 : -1;
-      return 0;
+    const sortedList = [...list].sort((a, b) => {
+      const aValue = a[currentlySortedColumn];
+      const bValue = b[currentlySortedColumn];
+
+      if (aValue == null) {
+        return 1;
+      }
+      if (bValue == null) {
+        return -1;
+      }
+
+      const result = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return direction === Direction.Asc ? result : -result;
     });
+
+    return sortedList;
+  });
+
+  visibleData = computed(() => {
+    const sortedData = this.sortedData();
+    const pageSize = this.localPageSize();
+    const currentPage = this.currentPage();
+
+    if (!pageSize) {
+      return sortedData;
+    }
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return sortedData.slice(startIndex, endIndex);
+  });
+
+  totalPages = computed(() => {
+    const pageSize = this.localPageSize();
+    const count = this.sortedData().length;
+
+    if (!pageSize || pageSize <= 0) {
+      return 1;
+    }
+
+    return Math.ceil(count / pageSize);
   });
 
   onHeaderClick(col: TColumn<T>) {
-    if (!this.sortable() || !col.sortable()) return;
-    const key = col.property() as string;
-    const same = key === this.sortedColumn();
-    const dir = this.sortDirection();
-
-    let next = Direction.Asc;
-    if (same) {
-      if (dir === Direction.Asc) next = Direction.Desc;
-      else if (dir === Direction.Desc) next = Direction.None;
+    if (!this.sortable() || !col.sortable()) {
+      return;
     }
 
-    this.sortedColumn.set(key);
-    this.sortDirection.set(next);
-    this.sortChange.emit({ columnName: key, direction: next });
+    const clickedColumnKey = col.property() as keyof T;
+    const currentlySortedColumn = this.sortedColumn();
+    const direction = this.sortDirection();
+
+    let nextDirection = Direction.Asc;
+    if (clickedColumnKey === currentlySortedColumn) {
+      if (direction === Direction.Asc) {
+        nextDirection = Direction.Desc;
+      } else if (direction === Direction.Desc) {
+        nextDirection = Direction.None;
+      }
+    }
+
+    this.sortedColumn.set(clickedColumnKey);
+    this.sortDirection.set(nextDirection);
+    this.sortChange.emit({ columnName: String(clickedColumnKey), direction: nextDirection });
   }
 
   getSortIcon(col: TColumn<T>): string {
-    if (this.sortedColumn() !== col.property()) return '⇅';
-    if (this.sortDirection() === Direction.Asc) return '▲';
-    if (this.sortDirection() === Direction.Desc) return '▼';
-    return '⇅';
-  }
+    const activeColumn = this.sortedColumn();
+    const direction = this.sortDirection();
 
-  visibleData = computed(() => {
-    const list = this.sortedData();
-    const size = this.localPageSize();
-    const page = this.currentPage();
-    if (!size) return list;
-    const start = (page - 1) * size;
-    return list.slice(start, start + size);
-  });
+    if (activeColumn !== col.property()) {
+      return '⇅';
+    }
 
-  get totalPages(): number {
-    const size = this.localPageSize();
-    const count = this.sortedData().length;
-    if (!size || size <= 0) return 1;
-    return Math.ceil(count / size);
+    switch (direction) {
+      case Direction.Asc:
+        return '▲';
+      case Direction.Desc:
+        return '▼';
+      default:
+        return '⇅';
+    }
   }
 
   prevPage() {
@@ -118,21 +156,25 @@ export class TGrid<T> {
       this.emitPagination();
     }
   }
+
   nextPage() {
-    if (this.currentPage() < this.totalPages) {
+    if (this.currentPage() < this.totalPages()) {
       this.currentPage.update((p) => p + 1);
       this.emitPagination();
     }
   }
+
   onPageSizeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const val = select?.value ?? '';
-    const newSize = val === '' ? null : Number(val);
+    const selectInput = event.target as HTMLSelectElement;
+    const value = selectInput?.value ?? '';
+    const newSize = value === '' ? null : Number(value);
+
     this.localPageSize.set(newSize);
     this.currentPage.set(1);
     this.emitPagination();
   }
-  emitPagination() {
+
+  private emitPagination() {
     this.paginationChange.emit({ currentPage: this.currentPage(), pageSize: this.localPageSize() });
   }
 }
