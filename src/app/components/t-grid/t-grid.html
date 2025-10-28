@@ -15,7 +15,7 @@
     <table class="t-grid__table">
       <thead>
         <tr>
-          @for (col of columns; track $index) {
+          @for (col of columns; track col.property()) {
           @let isSortable = sortable() && col.sortable();
           <th (click)="onHeaderClick(col)" [class.sortable]="isSortable">
             {{ col.name() }}
@@ -27,9 +27,9 @@
         </tr>
       </thead>
       <tbody>
-        @for (row of visibleData(); track $index) {
+        @for (row of paginatedData(); track $index) {
         <tr>
-          @for (col of columns; track col) {
+          @for (col of columns; track col.property()) {
           <td>{{ row[col.property() ] }}</td>
           }
         </tr>

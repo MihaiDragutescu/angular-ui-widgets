@@ -4,4 +4,4 @@ export enum Direction {
   Desc = 'desc',
 }
 
-export const DEFAULT_PAGE_SIZE_OPTIONS = [5, 10, 20];
+export const DEFAULT_PAGE_SIZE_OPTIONS = [5, 10, 20] as const;

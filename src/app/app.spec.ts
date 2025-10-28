@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { Direction } from './components/t-grid/t-grid.consts';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -12,5 +13,19 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('should sort data ascending and descending correctly', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    app.onSortChange({ columnName: 'firstName', direction: Direction.Asc });
+    expect(app.myData[0].firstName <= app.myData[1].firstName).toBeTrue();
+
+    app.onSortChange({ columnName: 'firstName', direction: Direction.Desc });
+    expect(app.myData[0].firstName >= app.myData[1].firstName).toBeTrue();
+
+    app.onSortChange({ columnName: 'firstName', direction: Direction.None });
+    expect(app.myData).toEqual(app.myData);
   });
 });

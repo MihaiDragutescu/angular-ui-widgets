@@ -12,7 +12,7 @@ import {
 import { isObservable, Observable } from 'rxjs';
 import { DEFAULT_PAGE_SIZE_OPTIONS, Direction } from './t-grid.consts';
 import { TColumn } from './t-column/t-column';
-import { PaginationChangeEvent, SortChangeEvent } from './t-grid.types';
+import { PageSize, PaginationChangeEvent, SortChangeEvent } from './t-grid.types';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -25,7 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class TGrid<T> {
   data = input.required<T[] | Observable<T[]>>();
   sortable = input<boolean>(false);
-  pageSize = input<number | null>(null);
+  pageSize = input<PageSize | null>(null);
 
   sortChange = output<SortChangeEvent>();
   paginationChange = output<PaginationChangeEvent>();
@@ -56,53 +56,26 @@ export class TGrid<T> {
     });
   }
 
-  private sortedData = computed(() => {
-    const list = this.resolvedData();
-    const currentlySortedColumn = this.sortedColumn();
-    const direction = this.sortDirection();
-
-    if (!currentlySortedColumn || direction === Direction.None) {
-      return list;
-    }
-
-    const sortedList = [...list].sort((a, b) => {
-      const aValue = a[currentlySortedColumn];
-      const bValue = b[currentlySortedColumn];
-
-      if (aValue == null) {
-        return 1;
-      }
-      if (bValue == null) {
-        return -1;
-      }
-
-      const result = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      return direction === Direction.Asc ? result : -result;
-    });
-
-    return sortedList;
-  });
-
-  visibleData = computed(() => {
-    const sortedData = this.sortedData();
+  paginatedData = computed(() => {
+    const data = this.resolvedData();
     const pageSize = this.localPageSize();
     const currentPage = this.currentPage();
 
     if (!pageSize) {
-      return sortedData;
+      return data;
     }
 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
 
-    return sortedData.slice(startIndex, endIndex);
+    return data.slice(startIndex, endIndex);
   });
 
   totalPages = computed(() => {
     const pageSize = this.localPageSize();
-    const count = this.sortedData().length;
+    const count = this.resolvedData().length;
 
-    if (!pageSize || pageSize <= 0) {
+    if (!pageSize || pageSize <= 0 || count === 0) {
       return 1;
     }
 
@@ -129,6 +102,10 @@ export class TGrid<T> {
 
     this.sortedColumn.set(clickedColumnKey);
     this.sortDirection.set(nextDirection);
+
+    this.currentPage.set(1);
+    this.notifyPaginationChange();
+
     this.sortChange.emit({ columnName: String(clickedColumnKey), direction: nextDirection });
   }
 
@@ -137,30 +114,30 @@ export class TGrid<T> {
     const direction = this.sortDirection();
 
     if (activeColumn !== col.property()) {
-      return '⇅';
+      return '\u21C5';
     }
 
     switch (direction) {
       case Direction.Asc:
-        return '▲';
+        return '\u25B2';
       case Direction.Desc:
-        return '▼';
+        return '\u25BC';
       default:
-        return '⇅';
+        return '\u21C5';
     }
   }
 
   prevPage() {
     if (this.currentPage() > 1) {
       this.currentPage.update((p) => p - 1);
-      this.emitPagination();
+      this.notifyPaginationChange();
     }
   }
 
   nextPage() {
     if (this.currentPage() < this.totalPages()) {
       this.currentPage.update((p) => p + 1);
-      this.emitPagination();
+      this.notifyPaginationChange();
     }
   }
 
@@ -171,10 +148,10 @@ export class TGrid<T> {
 
     this.localPageSize.set(newSize);
     this.currentPage.set(1);
-    this.emitPagination();
+    this.notifyPaginationChange();
   }
 
-  private emitPagination() {
+  private notifyPaginationChange() {
     this.paginationChange.emit({ currentPage: this.currentPage(), pageSize: this.localPageSize() });
   }
 }
