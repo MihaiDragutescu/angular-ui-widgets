@@ -1,0 +1,115 @@
+.t-grid {
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+
+  &__header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+  }
+
+  &__page-size {
+    font-size: 12px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fff;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+
+      &:hover {
+        border-color: #888;
+      }
+    }
+  }
+
+  &__scroll-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #fafafa;
+      color: #444;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .t-grid__sort-icon {
+      margin-left: 4px;
+      color: #888;
+    }
+
+    tr:hover td {
+      background: #f9f9f9;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+
+    button {
+      padding: 4px 12px;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: #43a047;
+      }
+
+      &:disabled {
+        background: #ccc;
+        cursor: default;
+      }
+    }
+
+    .t-grid__page-label {
+      font-size: 12px;
+      color: #444;
+    }
+  }
+}

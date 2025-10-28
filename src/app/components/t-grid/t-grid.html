@@ -1,0 +1,47 @@
+<div class="t-grid">
+  <div class="t-grid__header">
+    <label class="t-grid__page-size">
+      Show
+      <select (change)="onPageSizeChange($event)">
+        @for (size of pageSizeOptions; track size) {
+        <option [value]="size" [selected]="localPageSize() === size">{{ size }}</option>
+        }
+        <option value="">All</option>
+      </select>
+      rows
+    </label>
+  </div>
+  <div class="t-grid__scroll-container">
+    <table class="t-grid__table">
+      <thead>
+        <tr>
+          @for (col of columns; track col.property()) {
+          @let isSortable = sortable() && col.sortable();
+          <th (click)="onHeaderClick(col)" [class.sortable]="isSortable">
+            {{ col.name() }}
+            @if (isSortable) {
+            <span class="t-grid__sort-icon">{{ getSortIcon(col) }}</span>
+            }
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of paginatedData(); track $index) {
+        <tr>
+          @for (col of columns; track col.property()) {
+          <td>{{ row[col.property() ] }}</td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="t-grid__footer">
+    <button (click)="prevPage()" [disabled]="currentPage() === 1">Previous</button>
+    <span class="t-grid__page-label">
+      Page {{ currentPage() }} / {{ totalPages() }}
+    </span>
+    <button (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+  </div>
+</div>
